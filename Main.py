@@ -3,8 +3,8 @@ from math import sqrt
 import numpy
 import cv2
 
-imgPath1 = '2.jpg'
-imgPath2 = '1.jpg'
+imgPath1 = '1.jpg'
+imgPath2 = '7.jpg'
 
 
 def get_gray_scale(img_path):
@@ -16,7 +16,8 @@ def detect_faces(img_path):
 
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
     gray_scale = get_gray_scale(img_path)
-    faces = face_cascade.detectMultiScale(gray_scale, 1.2, 4)
+    faces = face_cascade.detectMultiScale(gray_scale, scaleFactor=1.2, minNeighbors=5, minSize=(30, 30),
+                                         flags=cv2.CASCADE_SCALE_IMAGE)
     maxArea = 0
     bound = (0, 0, 0, 0)
     for (x, y, w, h) in faces:
@@ -25,8 +26,15 @@ def detect_faces(img_path):
             bound = (x, y, w, h)
             maxArea = area
 
+    '''
     cv2.rectangle(gray_scale, (bound[0], bound[1]), (bound[0] + bound[2], bound[1] + bound[3]), (255, 0, 0), 1)
-    return gray_scale[y:bound[1] + bound[3], x:bound[0] + bound[2]]
+    print("detect_faces"+ img_path)
+    print(bound)
+    print(gray_scale[bound[1]:bound[1] + bound[3], bound[0]:bound[0] + bound[2]])
+    cv2.imshow("a", gray_scale[bound[1]:bound[1] + bound[3], bound[0]:bound[0] + bound[2]])
+    cv2.waitKey(0)
+    '''
+    return gray_scale[bound[1]:bound[1] + bound[3], bound[0]:bound[0] + bound[2]]
 
 
 def get_lbp(crop):
@@ -54,6 +62,7 @@ def get_lbp(crop):
 
 def cal_histogram(lbp_img, crop):
     imgArea = crop.shape[0] * crop.shape[1]
+
     regionH = int(crop.shape[0]/8)
     regionW = int(crop.shape[1]/8)
     histogram = numpy.zeros(shape=256*8*8)
@@ -64,8 +73,12 @@ def cal_histogram(lbp_img, crop):
                 x = regionW * int(i % 8) + b
                 index = int(lbp_img[y][x] * 255) + (i * 256)
                 histogram[index] = histogram[index] + 1
-    for d in range(256 * 8 * 8):
+
+
+    for d in range(256*8*8):
+        print(d, imgArea, sep=" ")
         histogram[d] = histogram[d] / imgArea
+
     '''for a in range(lbp_img.shape[0]):
         for b in range(lbp_img.shape[1]):
             index = int(lbp_img[a][b] * 255)
@@ -97,5 +110,7 @@ print(compare_histograms(hist, hist2))
 '''for c in range(len(hist)):
     print('hist' + str(c) + ':' + str(hist[c]))'''
 
+
+print(type(lbp1))
 cv2.imshow('img', lbp1)
 cv2.imshow('img2', lbp2)
